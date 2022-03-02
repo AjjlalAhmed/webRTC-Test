@@ -1,13 +1,20 @@
 <template>
   <div class="game">
-    <canvas width="640" height="640" ref="board" class="board"></canvas>
+    <canvas
+      v-if="role == 'admin' || role == null"
+      width="640"
+      height="640"
+      ref="board"
+      class="board"
+    ></canvas>
+    <img v-if="role == 'user'" width="640" height="640" :src="src" alt="" />
   </div>
 </template>
 
 <script>
 // Importing thing we need
 import { ref } from "@vue/reactivity";
-import { onMounted } from "@vue/runtime-core";
+import { onMounted, watch } from "@vue/runtime-core";
 // Importing helpers functions
 import {
   drawPaddle,
@@ -18,9 +25,27 @@ import { drawBall, bounceBall, moveBall } from "../helpers/ball";
 import { useRoute } from "vue-router";
 export default {
   name: "App",
-  setup() {
+  emits: ["sendData"],
+  props: ["peer", "conn", "videoFeed"],
+  setup(props, { emit }) {
     // Variables
+    const peer = props.peer;
+    const conn = props.conn;
+    
+    // conn.value.on("data", (data) => {
+    //   console.log(data);
+    // });
+
+    peer.on("connection", function (conn) {
+      conn.on("data", function (data) {
+        // Will print 'hi!'
+        console.log(data);
+      });
+    });
     const route = useRoute();
+    const role = ref(null);
+    const src = ref("null");
+    const video = ref(null);
     const board = ref(null);
     const ctx = ref(null);
     const box = ref(32);
@@ -42,8 +67,19 @@ export default {
 
     // Life cycle
     onMounted(() => {
+      if (route.query.role == "admin") role.value = "admin";
+      else if (route.query.role == "user") role.value = "user";
       ctx.value = board.value.getContext("2d");
       draw();
+
+      var stream = document.querySelector("canvas");
+
+     
+      setInterval(() => {
+        
+        if (!conn) return;
+        emit("sendData", stream.toDataURL("image/jpeg"));
+      }, ballSpeed.value);
     });
 
     // Functions
@@ -100,8 +136,15 @@ export default {
       }
     });
 
+    watch(
+      () => props.videoFeed,
+      () => {
+        src.value = props.videoFeed;
+      }
+    );
+
     // Returning data
-    return { board };
+    return { board, video, src, role };
   },
 };
 </script>

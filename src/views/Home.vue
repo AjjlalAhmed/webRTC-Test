@@ -13,60 +13,33 @@
 
 <script>
 import { onUpdated, ref, watch } from "vue";
-import Peer from "peerjs";
-import { v4 as uuidv4 } from "uuid";
 export default {
   name: "Home",
-  setup() {
+  emits: ["connect"],
+  props: ["peer", "conn"],
+  setup(props, { emit }) {
     // Variables
-    var peer = new Peer();
-    var conn = ref(null);
-    // const conn = new Peer();
+    const peer = props.peer;
+    const conn = props.conn;
     const youid = ref(null);
-    const Aconn = ref(undefined);
     const id = ref("");
 
     peer.on("open", (id) => {
       youid.value = id;
     });
 
-    // conn.on("data", (data) => {
-    //   console.log(data);
+    // peer.on("connection", function (conn) {
+    //   conn.on("data", function (data) {
+    //     // Will print 'hi!'
+    //     console.log(data);
+    //   });
+    //   setTimeout(() => {
+    //     conn.send("hey");
+    //   }, 2000);
     // });
-
-    // conn.on("connection", (NaConn) => {
-    //   console.log(1);
-    //   if (Aconn.value != undefined) Aconn.value.close();
-    //   oppnentid.value = NaConn.peer;
-    //   Aconn.value = NaConn;
-
-    // });
-
-    peer.on("connection", function (conn) {
-      conn.on("data", function (data) {
-        // Will print 'hi!'
-        console.log(data);
-      });
-      setTimeout(() => {
-        conn.send("hey");
-      }, 2000);
-    });
 
     const connect = () => {
-      conn.value = peer.connect(id.value);
-      // on open will be launch when you successfully connect to PeerServer
-      conn.value.on("open", function () {
-        // here you have conn.id
-        conn.value.send("hi!");
-      });
-
-      conn.value.on("data", function (data) {
-        // Will print 'hi!'
-        console.log(data);
-      });
-      // Aconn.value = conn.connect(id.value);
-      // oppnentid.value = Aconn.value.peer;
-      // Aconn.value.send("hey");
+      emit("connect", id.value);
     };
 
     return { connect, youid, id };

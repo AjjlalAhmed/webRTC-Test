@@ -3,8 +3,10 @@
     :peer="peer"
     :conn="conn"
     :videoFeed="videoFeed"
+    :paddle="paddle"
     @connect="connect"
     @sendData="sendData"
+    @paddleMoves="paddleMoves"
   />
 </template>
 
@@ -19,7 +21,8 @@ export default {
     const peer = new Peer();
     const conn = ref(null);
     const you = ref(null);
-    const videoFeed = ref(null)
+    const videoFeed = ref(null);
+    const paddle = ref(null);
     const router = useRouter();
 
     // Functions
@@ -27,7 +30,6 @@ export default {
       conn.value = peer.connect(id);
       // on open will be launch when you successfully connect to PeerServer
       conn.value.on("open", function () {
-        
         // here you have conn.id
         conn.value.send("hi!");
         router.push({ path: "/game", query: { role: "admin" } });
@@ -35,15 +37,19 @@ export default {
 
       conn.value.on("data", function (data) {
         // Will print 'hi!'
-       
+        // console.log(data);
+        paddle.value = data;
       });
     };
 
+    // This fucntion video stream of canvas
     const sendData = (data) => {
-      
-      // if(!conn) return
-      
+      // Sending data to other peers connection
       conn.value.send(data);
+    };
+
+    const paddleMoves = (data) => {
+      you.value.send(data);
     };
 
     // WebRTC
@@ -51,15 +57,13 @@ export default {
     peer.on("connection", function (conn) {
       you.value = conn;
       conn.on("data", function (data) {
-        // Will print 'hi!'
-     
-        videoFeed.value  =data
+        videoFeed.value = data;
       });
       router.push({ path: "/game", query: { role: "user" } });
     });
 
     // Returning data
-    return { peer, conn,videoFeed, connect, sendData };
+    return { peer, conn, videoFeed, paddle, connect, sendData, paddleMoves };
   },
 };
 </script>

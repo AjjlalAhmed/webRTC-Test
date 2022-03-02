@@ -15,6 +15,7 @@
 // Importing thing we need
 import { ref } from "@vue/reactivity";
 import { onMounted, watch } from "@vue/runtime-core";
+import { v4 as uuidv4 } from "uuid";
 // Importing helpers functions
 import {
   drawPaddle,
@@ -25,30 +26,20 @@ import { drawBall, bounceBall, moveBall } from "../helpers/ball";
 import { useRoute } from "vue-router";
 export default {
   name: "App",
-  emits: ["sendData"],
-  props: ["peer", "conn", "videoFeed"],
+  emits: ["sendData", "paddleMoves"],
+  props: ["peer", "conn", "videoFeed", "paddle"],
   setup(props, { emit }) {
     // Variables
     const peer = props.peer;
     const conn = props.conn;
-    
-    // conn.value.on("data", (data) => {
-    //   console.log(data);
-    // });
-
-    peer.on("connection", function (conn) {
-      conn.on("data", function (data) {
-        // Will print 'hi!'
-        console.log(data);
-      });
-    });
     const route = useRoute();
     const role = ref(null);
     const src = ref("null");
-    const video = ref(null);
+
     const board = ref(null);
     const ctx = ref(null);
     const box = ref(32);
+
     const paddleLeft = ref([
       { x: 1 * box.value, y: 1 * box.value },
       { x: 1 * box.value, y: 2 * box.value },
@@ -61,8 +52,9 @@ export default {
       { x: 18 * box.value, y: 3 * box.value },
       { x: 18 * box.value, y: 4 * box.value },
     ]);
+
     const ball = ref({ x: 9 * box.value + 16, y: 9 * box.value });
-    const ballSpeed = ref(80);
+    const ballSpeed = ref(40);
     const directions = ref({ x: "right", y: "down" });
 
     // Life cycle
@@ -74,9 +66,7 @@ export default {
 
       var stream = document.querySelector("canvas");
 
-     
       setInterval(() => {
-        
         if (!conn) return;
         emit("sendData", stream.toDataURL("image/jpeg"));
       }, ballSpeed.value);
@@ -122,8 +112,19 @@ export default {
     // Adding event listener to keydown
     window.addEventListener("keydown", (e) => {
       // Checking which key is press
-      if (e.key == "w") controlPaddlesUP(paddleLeft, box);
-      else if (e.key == "s") controlPaddlesDown(paddleLeft, box);
+      if (e.key == "w") {
+        if (role.value == "user") {
+          emit("paddleMoves", { key: "w", id: uuidv4() });
+        } else {
+          controlPaddlesUP(paddleLeft, box);
+        }
+      } else if (e.key == "s") {
+        if (role.value == "user") {
+          emit("paddleMoves", { key: "s", id: uuidv4() });
+        } else {
+          controlPaddlesDown(paddleLeft, box);
+        }
+      }
       // Checking which key is press
       if (e.key == "ArrowUp") {
         // Preventing defualt behavior
@@ -136,6 +137,7 @@ export default {
       }
     });
 
+    // Watching props
     watch(
       () => props.videoFeed,
       () => {
@@ -143,8 +145,17 @@ export default {
       }
     );
 
+    watch(
+      () => props.paddle,
+      () => {
+        if (!conn) return;
+        if (props.paddle.key == "w") controlPaddlesUP(paddleRight, box);
+        else if (props.paddle.key == "s") controlPaddlesDown(paddleRight, box);
+      }
+    );
+
     // Returning data
-    return { board, video, src, role };
+    return { board, src, role };
   },
 };
 </script>

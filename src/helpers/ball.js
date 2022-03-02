@@ -40,19 +40,20 @@ export const moveBall = (directions, ball, ctx, box, ballSpeed) => {
 
     // Moving ball according to X direction
     if (directions.value.x == "left") {
-        ball.value.x += 16;
+        ball.value.x += 2;
     } else {
-        ball.value.x -= 16;
+        ball.value.x -= 2;
     }
     // Moving ball according to Y direction
     if (directions.value.y == "down") {
-        ball.value.y += 16;
+        ball.value.y += 2;
     } else if (directions.value.y == "up") {
-        ball.value.y -= 16;
+        ball.value.y -= 2;
     }
     // Calling same function to create loop
-    setTimeout(
-        moveBall.bind(null, directions, ball, ctx, box, ballSpeed),
-        ballSpeed.value
-    );
+    // setTimeout(
+    //     moveBall.bind(null, directions, ball, ctx, box, ballSpeed),
+    //     ballSpeed.value
+    // );
+    requestAnimationFrame(moveBall.bind(null, directions, ball, ctx, box, ballSpeed))
 };

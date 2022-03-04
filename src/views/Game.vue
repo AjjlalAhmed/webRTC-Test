@@ -54,7 +54,7 @@ export default {
     ]);
 
     const ball = ref({ x: 9 * box.value + 16, y: 9 * box.value });
-    const ballSpeed = ref(40);
+    const ballSpeed = ref(50);
     const directions = ref({ x: "right", y: "down" });
 
     // Life cycle
@@ -64,11 +64,9 @@ export default {
       ctx.value = board.value.getContext("2d");
       draw();
 
-      var stream = document.querySelector("canvas");
-
       setInterval(() => {
         if (!conn) return;
-        emit("sendData", stream.toDataURL("image/jpeg"));
+        emit("sendData", board.value.toDataURL("image/jpeg", 0.1));
       }, ballSpeed.value);
     });
 

@@ -30,14 +30,10 @@ export default {
       conn.value = peer.connect(id);
       // on open will be launch when you successfully connect to PeerServer
       conn.value.on("open", function () {
-        // here you have conn.id
-        conn.value.send("hi!");
         router.push({ path: "/game", query: { role: "admin" } });
       });
 
       conn.value.on("data", function (data) {
-        // Will print 'hi!'
-        // console.log(data);
         paddle.value = data;
       });
     };
@@ -51,7 +47,7 @@ export default {
     const paddleMoves = (data) => {
       you.value.send(data);
     };
-
+    
     // WebRTC
 
     peer.on("connection", function (conn) {

@@ -7,7 +7,8 @@
       ref="board"
       class="board"
     ></canvas>
-    <img v-if="role == 'user'" width="640" height="640" :src="src" alt="" />
+    <!-- <img v-if="role == 'user'" width="640" height="640" :src="src" alt="" /> -->
+    <video v-if="role == 'user'" width="640" height="640" class="video"></video>
   </div>
 </template>
 
@@ -35,6 +36,16 @@ export default {
     const route = useRoute();
     const role = ref(null);
     const src = ref("null");
+
+    peer.on("call", function (call) {
+      // Answer the call, providing our mediaStream
+      call.answer();
+      call.on("stream", function (remoteStream) {
+        const video = document.querySelector("video");
+        video.srcObject = remoteStream;
+        video.play();
+      });
+    });
 
     const board = ref(null);
     const ctx = ref(null);
@@ -64,10 +75,15 @@ export default {
       ctx.value = board.value.getContext("2d");
       draw();
 
-      setInterval(() => {
-        if (!conn) return;
-        emit("sendData", board.value.toDataURL("image/jpeg", 0.1));
-      }, ballSpeed.value);
+      if (conn) {
+        const stream = board.value.captureStream();
+        const call = peer.call(conn.peer, stream);
+      }
+
+      // setInterval(() => {
+      //   if (!conn) return;
+      //   emit("sendData", board.value.toDataURL("image/jpeg", 0.1));
+      // }, ballSpeed.value);
     });
 
     // Functions

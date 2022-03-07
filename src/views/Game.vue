@@ -65,7 +65,7 @@ export default {
     ]);
 
     const ball = ref({ x: 9 * box.value + 16, y: 9 * box.value });
-    const ballSpeed = ref(50);
+    const ballSpeed = ref(100);
     const directions = ref({ x: "right", y: "down" });
 
     // Life cycle

@@ -12,7 +12,7 @@
 </template>
 
 <script>
-import { onUpdated, ref, watch } from "vue";
+import { onMounted, onUpdated, ref, watch } from "vue";
 export default {
   name: "Home",
   emits: ["connect"],
@@ -26,6 +26,10 @@ export default {
 
     peer.on("open", (id) => {
       youid.value = id;
+    });
+
+    onMounted(() => {
+      youid.value = peer.id;
     });
 
     // peer.on("connection", function (conn) {

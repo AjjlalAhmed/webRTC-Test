@@ -20,9 +20,9 @@ export const controlPaddlesDown = (paddle, box) => {
 
 // This function draw paddles
 export const drawPaddle = (paddle, ctx, box, color) => {
-    Object.values(paddle.value).forEach((item, index) => {
-        if (index == 3) return
-        ctx.value.fillStyle = color;
-        ctx.value.fillRect(item.x, item.y, 16, box.value);
-    });
+    ctx.value.lineWidth = 5;
+    ctx.value.shadowBlur = 10;
+    ctx.value.shadowColor = color;
+    ctx.value.strokeStyle = color;
+    ctx.value.strokeRect(paddle.value[0].x, paddle.value[0].y, 16, box.value * 3);
 };

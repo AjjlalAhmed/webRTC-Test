@@ -1,6 +1,26 @@
 <template>
   <!-- Container  -->
   <div class="container">
+    <!-- Game status  -->
+    <div class="game-status">
+      <ul class="status-bar">
+        <li class="playerOne-name">
+          <span v-if="players.playerOne == true">ready</span>
+          <span v-else>not ready</span>
+        </li>
+        <li class="playerTwo-name">
+          <span v-if="players.playerTwo">ready</span>
+          <span v-else>not ready</span>
+        </li>
+      </ul>
+      <div @click="ready" class="start-btn">ready</div>
+      <ul class="score">
+        <li class="playerOne-score">{{ score.playerOne }}</li>
+        <li>vs</li>
+        <li class="playerOne-score">{{ score.playerTwo }}</li>
+      </ul>
+    </div>
+
     <!-- Game   -->
     <div class="game">
       <!-- Canvas  -->
@@ -10,6 +30,7 @@
         height="640"
         ref="board"
         class="board"
+        hidden
       ></canvas>
       <!-- Neon border   -->
       <div class="neon-border">
@@ -21,30 +42,23 @@
         </div>
       </div>
       <!-- Video stream -->
-      <video v-if="role == 'user'" width="1000" height="640" class="video"></video>
+      <video
+        v-if="
+          role == 'user' || !isGameRunning
+          //&& role == 'admin'
+        "
+        class="video"
+      ></video>
+      <img v-if="role == 'admin'" class="video-admin" />
     </div>
-    <!-- Game status  -->
-    <div class="game-status">
-      <ul class="status-bar">
-        <li class="playerOne-name">
-          {{ players.playerOneName }}
-          <span v-if="players.playerOne == true">ready</span>
-          <span v-else>not ready</span>
-        </li>
-        <li class="score">
-          <ul>
-            <li class="playerOne-score">{{ score.playerOne }}</li>
-            <li>vs</li>
-            <li class="playerOne-score">{{ score.playerTwo }}</li>
-          </ul>
-        </li>
-        <li class="playerTwo-name">
-          {{ players.playerTwoName }}
-          <span v-if="players.playerTwo">ready</span>
-          <span v-else>not ready</span>
-        </li>
-      </ul>
-      <div @click="ready" class="start-btn">ready</div>
+
+    <div class="controls">
+      <button @click="keydown('w')" class="up">
+        <i class="fa-solid fa-angle-up"></i>
+      </button>
+      <button @click="keydown('s')" class="down">
+        <i class="fa-solid fa-angle-down"></i>
+      </button>
     </div>
 
     <div v-if="isGameFinished" class="game-finised">
@@ -195,6 +209,8 @@ export default {
 
     const draw = () => {
       if (!isGameRunning.value) return;
+      const imgVideo = document.querySelector(".video-admin");
+      imgVideo.src = board.value.toDataURL();
       // Clearing screen
       clearScreen(ctx);
       // Drawing line
@@ -212,32 +228,26 @@ export default {
       requestAnimationFrame(draw);
     };
 
-    // Adding event listener to keydown
-    window.addEventListener("keydown", (e) => {
+    const keydown = (e) => {
       // Checking which key is press
-      if (e.key == "w") {
+      if (e == "w") {
         if (role.value == "user") {
           emit("paddleMoves", { key: "w", id: uuidv4() });
         } else {
           controlPaddlesUP(paddleLeft, box);
         }
-      } else if (e.key == "s") {
+      } else if (e == "s") {
         if (role.value == "user") {
           emit("paddleMoves", { key: "s", id: uuidv4() });
         } else {
           controlPaddlesDown(paddleLeft, box);
         }
       }
-      // // Checking which key is press
-      // if (e.key == "ArrowUp") {
-      //   // Preventing defualt behavior
-      //   e.preventDefault();
-      //   controlPaddlesUP(paddleRight, box);
-      // } else if (e.key == "ArrowDown") {
-      //   // Preventing defualt behavior
-      //   e.preventDefault();
-      //   controlPaddlesDown(paddleRight, box);
-      // }
+    };
+
+    // Adding event listener to keydown
+    window.addEventListener("keydown", (e) => {
+      keydown(e.key);
     });
 
     // Watching props
@@ -336,7 +346,18 @@ export default {
     });
 
     // Returning data
-    return { board, src, role, score, IsReady, players, isGameFinished, ready };
+    return {
+      board,
+      src,
+      role,
+      score,
+      IsReady,
+      players,
+      isGameFinished,
+      isGameRunning,
+      ready,
+      keydown,
+    };
   },
 };
 </script>
@@ -355,6 +376,7 @@ export default {
     flex-direction: column;
     background: #111;
     position: relative;
+    padding: 10px;
   }
   .game {
     display: flex;
@@ -362,28 +384,29 @@ export default {
     align-items: center;
     justify-content: center;
     margin-top: 50px;
+    max-width: 1000px;
+    height: auto;
+    width: 100%;
+    border: 2px solid #fff;
 
     position: relative;
     .board {
       background: #000;
       border-radius: 2px;
-      border: 2px solid #fff;
     }
     .neon-border {
       display: block;
       position: absolute;
-      // background: #9999;
-      width: 800px;
-      height: 640px;
+      min-width: 100%;
+      height: 100%;
       .bar-container {
         position: relative;
         height: 100%;
         .bar-one {
           position: absolute;
           top: -8px;
-          left: -80px;
           display: block;
-          width: 440px;
+          width: 45%;
           height: 10px;
           background: red;
           box-shadow: 0 0 2px #f1f1f1, 0 0 4px #ff0000, 0 0 6px #ff0000, 0 0 10px #ff0000,
@@ -392,9 +415,9 @@ export default {
         .bar-two {
           position: absolute;
           top: -8px;
-          right: -80px;
+          right: 0px;
           display: block;
-          width: 450px;
+          width: 45%;
           height: 10px;
           background: #00f7ff;
           box-shadow: 0 0 2px #f1f1f1, 0 0 4px #00f7ff, 0 0 6px #00f7ff, 0 0 10px #00f7ff,
@@ -403,9 +426,8 @@ export default {
         .bar-three {
           position: absolute;
           bottom: -8px;
-          left: -80px;
           display: block;
-          width: 440px;
+          width: 45%;
           height: 10px;
           background: red;
           box-shadow: 0 0 2px #f1f1f1, 0 0 4px #ff0000, 0 0 6px #ff0000, 0 0 10px #ff0000,
@@ -414,9 +436,9 @@ export default {
         .bar-four {
           position: absolute;
           bottom: -8px;
-          right: -80px;
+          right: 0px;
           display: block;
-          width: 450px;
+          width: 45%;
           height: 10px;
           background: #00f7ff;
           box-shadow: 0 0 2px #f1f1f1, 0 0 4px #00f7ff, 0 0 6px #00f7ff, 0 0 10px #00f7ff,
@@ -425,19 +447,55 @@ export default {
       }
     }
     video {
-      border: 2px solid #fff;
+      width: 100%;
+      height: auto;
+    }
+    .video-admin {
+      width: 100%;
+      height: auto;
+    }
+  }
+  .controls {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    max-width: 1000px;
+    margin: 30px 0px;
+    button {
+      background: transparent;
+      border: 5px solid #fff;
+      display: block;
+      cursor: pointer;
+      border-radius: 50%;
+
+      i {
+        font-size: clamp(1.5rem, 2vw + 2rem, 5rem);
+        color: #fff;
+        padding: 10px 20px;
+      }
     }
   }
   .game-status {
     margin-top: 50px;
     max-width: 1280px;
+    .score {
+      display: flex;
+      justify-content: space-between;
+      list-style: none;
+      margin: 20px 0px;
+      li {
+        color: #fff;
+        font-size: clamp(2rem, 2vw + 2rem, 5rem);
+      }
+    }
     .status-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       list-style: none;
+      gap: 50px;
       li {
-        font-size: 1.5rem;
+        font-size: clamp(0.8rem, 1vw + 1rem, 2.2rem);
         text-transform: capitalize;
         padding: 10px;
         width: 100%;
@@ -448,7 +506,7 @@ export default {
           background: #9999;
           justify-content: space-around;
           li {
-            font-size: 3rem;
+            font-size: clamp(0.9rem, 1vw + 1.5rem, 3rem);
             text-transform: capitalize;
             padding: 10px;
             width: auto;
@@ -457,31 +515,35 @@ export default {
         }
       }
       .playerOne-name {
-        background: #ff0000;
-        color: #000;
+        background: red;
         font-weight: bolder;
         text-align: center;
         white-space: nowrap;
-        font-size: 2rem;
+        font-size: clamp(0.8rem, 1vw + 1rem, 2.2rem);
+        color: #fff;
+        font-weight: 700;
       }
       .playerTwo-name {
         background: #00f7ff;
         text-align: center;
-        color: #000;
+        color: #fff;
         white-space: nowrap;
         font-weight: bolder;
-        font-size: 2rem;
+        font-size: clamp(0.8rem, 1vw + 1rem, 2.2rem);
+        font-weight: 700;
       }
     }
     .start-btn {
       background: #fff;
-      max-width: 200px;
+      max-width: 150px;
       margin: 20px auto;
       padding: 10px;
       font-size: 2rem;
       text-transform: capitalize;
       text-align: center;
       cursor: pointer;
+      color: #000;
+      font-weight: 700;
     }
   }
   .game-finised {
@@ -494,9 +556,10 @@ export default {
     ul {
       background: #f1f1f1;
       padding: 20px;
+      margin: 10px;
       li {
         list-style: none;
-        font-size: 5rem;
+        font-size: 3rem;
         text-transform: capitalize;
         text-align: center;
         padding: 10px;

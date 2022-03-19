@@ -62,14 +62,14 @@ export default {
     padding: 10px;
     gap: 20px;
     .id {
-      font-size: 1.5rem;
+      font-size: clamp(0.8rem, 1vw + 1rem, 2rem);
       span {
         text-transform: capitalize;
         color: dodgerblue;
       }
     }
     input {
-      min-width: 500px;
+      min-width: 280px;
       padding: 10px 0px;
       text-indent: 10px;
       border-radius: 3px;
